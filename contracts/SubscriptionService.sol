@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-contract SubscriptionService {
-    address public owner;
+contract SubscriptionService is Ownable {
     uint256 public subscriptionFee;
     uint256 public interval;
     address[] public subscriptors;
@@ -11,10 +11,6 @@ contract SubscriptionService {
 
     event SubscriptionRenewed(address indexed subscriber, uint256 expiryTimestamp);
 
-    modifier onlyOwner() {
-        require(msg.sender == owner, "Only owner can call this function");
-        _;
-    }
 
     modifier isNotSubscribed() {
         require(!alreadySubscribed[msg.sender], "Address already subscribed");
@@ -26,8 +22,7 @@ contract SubscriptionService {
         _;
     }
 
-    constructor(uint256 _subscriptionFee, uint256 _interval) {
-        owner = msg.sender;
+    constructor(uint256 _subscriptionFee, uint256 _interval) Ownable(msg.sender) {
         subscriptionFee = _subscriptionFee;
         interval = _interval;
     }
@@ -100,6 +95,6 @@ contract SubscriptionService {
         uint256 balance = address(this).balance;
         require(balance > 0, "No balance to withdraw");
 
-        payable(owner).transfer(balance);
+        payable(owner()).transfer(balance);
     }
 }
