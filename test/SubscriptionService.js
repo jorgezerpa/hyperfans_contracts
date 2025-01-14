@@ -2,12 +2,8 @@ const {
   time,
   loadFixture,
 } = require("@nomicfoundation/hardhat-toolbox/network-helpers");
-const { anyValue } = require("@nomicfoundation/hardhat-chai-matchers/withArgs");
 const { expect } = require("chai");
-const { network, upgrades } = require("hardhat");
-
-const ARBITRUM_RPC = "https://arbitrum-mainnet.infura.io/v3/b26a78bcb38b4957a68b3cdc645c2547"
-const ARBITRUM_SEPOLIA_RPC = "https://arbitrum-sepolia.infura.io/v3/b26a78bcb38b4957a68b3cdc645c2547"
+const { upgrades } = require("hardhat");
 
 const USDCAddressArbitrum = "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"; // 6 decimals | On Arbitrum
 

@@ -27,18 +27,27 @@ module.exports = buildModule("SubscriptionServiceModule", async(m) => {
 // }
 
 
-// previous code of ignite/modules
-// // This setup uses Hardhat Ignition to manage smart contract deployments.
-// // Learn more about it at https://hardhat.org/ignition
+
+
+
+
+
+// EXAMPLE CODE
+// This setup uses Hardhat Ignition to manage smart contract deployments.
+// Learn more about it at https://hardhat.org/ignition
 
 // const { buildModule } = require("@nomicfoundation/hardhat-ignition/modules");
 
-// module.exports = buildModule("SubscriptionServiceModule", (m) => {
+// const JAN_1ST_2030 = 1893456000;
+// const ONE_GWEI = 1_000_000_000n;
 
-//   // const SubscriptionService = m.contract("SubscriptionService", [unlockTime], {
-//   //   value: lockedAmount,
-//   // });
-//   const SubscriptionService = m.contract("SubscriptionService");
+// module.exports = buildModule("LockModule", (m) => {
+//   const unlockTime = m.getParameter("unlockTime", JAN_1ST_2030);
+//   const lockedAmount = m.getParameter("lockedAmount", ONE_GWEI);
 
-//   return { SubscriptionService };
+//   const lock = m.contract("Lock", [unlockTime], {
+//     value: lockedAmount,
+//   });
+
+//   return { lock };
 // });
