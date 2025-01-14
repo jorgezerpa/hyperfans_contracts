@@ -1,6 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
+// TO DOs
+// 1. What if owner wants to short a subscription or remove one?
+// 2. I am extending subscription, should not be better set a fixed date instead?
+// solution for 1 and 2 -> setEndDate function or something like that 
 
 contract SubscriptionService is Ownable {
     uint256 public subscriptionFee;
@@ -29,6 +35,18 @@ contract SubscriptionService is Ownable {
 
     function setSubscriptionFee(uint256 _newFee) external onlyOwner {
         subscriptionFee = _newFee;
+    }
+
+    function setSubscriptionInterval(uint256 _newInterval) external onlyOwner {
+        interval = _newInterval;
+    }
+    
+    function getSubscriptionFee() external view returns(uint256) {
+        return subscriptionFee;
+    }
+
+    function getSubscriptionInterval() external view returns(uint256) {
+        return interval;
     }
 
     function subscribe() external payable isNotSubscribed {
