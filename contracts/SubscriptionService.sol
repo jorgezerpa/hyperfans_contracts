@@ -5,11 +5,6 @@ import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Own
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-// TO DOs
-// 1. What if owner wants to short a subscription or remove one?
-// 2. I am extending subscription, should not be better set a fixed date instead?
-// solution for 1 and 2 -> setEndDate function or something like that 
-
 contract SubscriptionService is OwnableUpgradeable {
     // No put direct values here. Set it on initializer if necessary (upgradeable rules) -> because: this is equivalent to set this values on the constructors. 
     uint256 public subscriptionFee;
