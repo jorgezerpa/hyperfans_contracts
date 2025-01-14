@@ -5,12 +5,14 @@ import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Own
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-// TO DOs
-// 1. What if owner wants to short a subscription or remove one?
-// 2. I am extending subscription, should not be better set a fixed date instead?
-// solution for 1 and 2 -> setEndDate function or something like that 
+// this contract is just for testing upgrades
+// we are doing:
+// 1. Adding a new value variable "x" to storage and creating a function to getting it
+// 2. add initializeX function because the initialize runs only once 
+// 3. Modifying setSubscriptionFee function to add 1 to this new x value
+// ALL OTHER FUNCTIONALITIES SHOULED REAMAIN THE SAME. (means that all previous tests should be still working)
 
-contract SubscriptionService is OwnableUpgradeable {
+contract SubscriptionServiceV2 is OwnableUpgradeable {
     // No put direct values here. Set it on initializer if necessary (upgradeable rules) -> because: this is equivalent to set this values on the constructors. 
     uint256 public subscriptionFee;
     uint256 public interval;
@@ -18,8 +20,11 @@ contract SubscriptionService is OwnableUpgradeable {
     mapping(address => bool) alreadySubscribed;
     mapping(address => uint256) public subscriptionExpiry;
     address currencyAddress;
+    // adding a new value
+    uint256 x;
     // Storage gap to reserve space for future variables
-    uint256[50] private __gap; 
+    uint256[49] private __gap; 
+    
 
     event SubscriptionRenewed(address indexed subscriber, uint256 expiryTimestamp);
 
@@ -40,6 +45,12 @@ contract SubscriptionService is OwnableUpgradeable {
         subscriptionFee = _subscriptionFee;
         interval = _interval;
         currencyAddress = _currencyAddress;
+        // initializing new value
+        x = 10;
+    }
+
+    function initializeX() public {
+        x = 10;
     }
 
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -47,8 +58,14 @@ contract SubscriptionService is OwnableUpgradeable {
         _disableInitializers(); // to block calls to initialize function from another origin than the proxy
     }
 
+    // getting new value
+    function getX() external view returns(uint256){
+        return x;
+    }
+
     function setSubscriptionFee(uint256 _newFee) external onlyOwner {
         subscriptionFee = _newFee;
+        x = x+1;
     }
 
     function setSubscriptionInterval(uint256 _newInterval) external onlyOwner {

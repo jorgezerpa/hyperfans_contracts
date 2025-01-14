@@ -11,7 +11,7 @@ const ARBITRUM_SEPOLIA_RPC = "https://arbitrum-sepolia.infura.io/v3/b26a78bcb38b
 
 const USDCAddressArbitrum = "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"; // 6 decimals | On Arbitrum
 
-describe("SubscriptionService", function () {
+describe("SubscriptionServiceUpgrades", function () {
   
   async function deploySubscriptionServiceFixture() {
     const subscriptionFee = 100 // 6 decimals
@@ -19,10 +19,14 @@ describe("SubscriptionService", function () {
 
     const [owner, account1] = await ethers.getSigners();
 
+    // upgrading
     const SubscriptionService = await ethers.getContractFactory("SubscriptionService");
+    const SubscriptionServiceV2 = await ethers.getContractFactory("SubscriptionServiceV2");
+    
     const subscriptionService = await upgrades.deployProxy(SubscriptionService, [subscriptionFee, interval, USDCAddressArbitrum]);
+    const upgraded = await upgrades.upgradeProxy(await subscriptionService.getAddress(), SubscriptionServiceV2);
       
-    return { subscriptionService, subscriptionFee, interval, owner, account1 };
+    return { subscriptionService: upgraded, subscriptionFee, interval, owner, account1 };
   }
 
   async function deploySubscriptionServiceWithUSDCFixture() {
@@ -31,9 +35,34 @@ describe("SubscriptionService", function () {
 
     const [owner, account1, account2, account3, account4, account5] = await ethers.getSigners();
 
+        // upgrading
     const SubscriptionService = await ethers.getContractFactory("SubscriptionService");
+    const SubscriptionServiceV2 = await ethers.getContractFactory("SubscriptionServiceV2");
+        
     const subscriptionService = await upgrades.deployProxy(SubscriptionService, [subscriptionFee, interval, USDCAddressArbitrum]);
+    const upgraded = await upgrades.upgradeProxy(await subscriptionService.getAddress(), SubscriptionServiceV2);
+          
+    // const USDC = await ethers.getContractAt("IERC20", USDCAddressArbitrum, owner); // no need to pass owner value cause is taken by default  
+    const USDC = await ethers.getContractAt("IERC20", USDCAddressArbitrum, owner); // OWNER HAS 6412 USDC units 
+    await USDC.connect(owner).transfer(account1, 200);
+    await USDC.connect(owner).transfer(account2, 200);
+    await USDC.connect(owner).transfer(account3, 200);
+    await USDC.connect(owner).transfer(account4, 200);
+    await USDC.connect(owner).transfer(account5, 200);
 
+    return { subscriptionService: upgraded, USDC, subscriptionFee, interval, owner, account1, account2, account3, account4, account5 };
+  }
+
+  async function deploySubscriptionServiceWithUSDCWithoutUpgradeFixture() {
+    const subscriptionFee = 100 // 6 decimals
+    const interval = 86400; // 1 day in seconds
+
+    const [owner, account1, account2, account3, account4, account5] = await ethers.getSigners();
+
+        // upgrading
+    const SubscriptionService = await ethers.getContractFactory("SubscriptionService");   
+    const subscriptionService = await upgrades.deployProxy(SubscriptionService, [subscriptionFee, interval, USDCAddressArbitrum]);
+          
     // const USDC = await ethers.getContractAt("IERC20", USDCAddressArbitrum, owner); // no need to pass owner value cause is taken by default  
     const USDC = await ethers.getContractAt("IERC20", USDCAddressArbitrum, owner); // OWNER HAS 6412 USDC units 
     await USDC.connect(owner).transfer(account1, 200);
@@ -49,6 +78,42 @@ describe("SubscriptionService", function () {
   // -------------------------
   // TESTS
   // -------------------------
+  describe("Upgrades", async function () {
+    it("Should get x variable", async function () {
+      const { subscriptionService } = await loadFixture(deploySubscriptionServiceFixture);
+      await subscriptionService.initializeX()
+      const x = await subscriptionService.getX()
+      expect(x).to.be.equal(10);
+    });
+    it("Should x variable by own after call setSubscriptionFee", async function () {
+      const { subscriptionService } = await loadFixture(deploySubscriptionServiceFixture);
+      subscriptionService.initializeX()
+      await subscriptionService.setSubscriptionFee(1000);
+      const x = await subscriptionService.getX();
+      expect(x).to.be.equal(11);
+    });
+    it("Should preserve state before initialization", async function () {
+      const { subscriptionService, owner, account1, USDC } = await loadFixture(deploySubscriptionServiceWithUSDCWithoutUpgradeFixture);
+
+      // subscribe one
+      const prevOwnerBalance = await USDC.balanceOf(owner);
+      await USDC.connect(account1).approve(subscriptionService, 100);    
+      await subscriptionService.connect(account1).subscribe();
+
+      const subscriptors = await subscriptionService.getSubscriptors();
+
+      //UPGRADE
+      const SubscriptionServiceV2 = await ethers.getContractFactory("SubscriptionServiceV2");
+      const upgraded = await upgrades.upgradeProxy(await subscriptionService.getAddress(), SubscriptionServiceV2);
+      await upgraded.initializeX()
+      const x = await upgraded.getX();
+      const subscriptorsUpgraded = await subscriptionService.getSubscriptors();
+      expect(x).to.be.equal(10); // check if was upgraded
+      expect(subscriptors[0]).to.be.equal(subscriptorsUpgraded[0]); // should keep the previous state because the storage is shared 
+    });
+  });
+
+  // all rests for V1 should work the same
   describe("Deployments", async function () {
     it("Should set the correct owner", async function () {
       const { subscriptionService, owner } = await loadFixture(deploySubscriptionServiceFixture);
