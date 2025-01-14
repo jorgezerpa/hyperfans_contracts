@@ -20,7 +20,9 @@ describe("SubscriptionService", function () {
     const [owner, account1] = await ethers.getSigners();
 
     const SubscriptionService = await ethers.getContractFactory("SubscriptionService");
-    const subscriptionService = await SubscriptionService.deploy(subscriptionFee, interval, USDCAddressArbitrum);
+    // const subscriptionService = await SubscriptionService.deploy(subscriptionFee, interval, USDCAddressArbitrum);
+    const subscriptionService = await SubscriptionService.deploy();
+    subscriptionService.initialize(subscriptionFee, interval, USDCAddressArbitrum);
 
     return { subscriptionService, subscriptionFee, interval, owner, account1 };
   }
@@ -32,7 +34,9 @@ describe("SubscriptionService", function () {
     const [owner, account1, account2, account3, account4, account5] = await ethers.getSigners();
 
     const SubscriptionService = await ethers.getContractFactory("SubscriptionService");
-    const subscriptionService = await SubscriptionService.deploy(subscriptionFee, interval, USDCAddressArbitrum);
+    // const subscriptionService = await SubscriptionService.deploy(subscriptionFee, interval, USDCAddressArbitrum);
+    const subscriptionService = await SubscriptionService.deploy();
+    subscriptionService.initialize(subscriptionFee, interval, USDCAddressArbitrum);
 
     // const USDC = await ethers.getContractAt("IERC20", USDCAddressArbitrum, owner); // no need to pass owner value cause is taken by default  
     const USDC = await ethers.getContractAt("IERC20", USDCAddressArbitrum, owner); // OWNER HAS 6412 USDC units 

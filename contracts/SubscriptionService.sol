@@ -1,14 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+// import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 // TO DOs
 // 1. What if owner wants to short a subscription or remove one?
 // 2. I am extending subscription, should not be better set a fixed date instead?
 // solution for 1 and 2 -> setEndDate function or something like that 
 
-contract SubscriptionService is Ownable {
+contract SubscriptionService is OwnableUpgradeable {
+    // No put direct values here. Set it on initializer if necessary (upgradeable rules) -> because: this is equivalent to set this values on the constructors. 
     uint256 public subscriptionFee;
     uint256 public interval;
     address[] public subscriptors;
@@ -30,10 +33,17 @@ contract SubscriptionService is Ownable {
         _;
     }
 
-    constructor(uint256 _subscriptionFee, uint256 _interval, address _currencyAddress) Ownable(msg.sender) {
+    // REPLACE CONSTRUCTOR WITH INITIALZE FUNCTION FOR UPGRADEABILITY (make sure to follow the Open Zeppelin rules for upgradeable contracts)
+    function initialize(uint256 _subscriptionFee, uint256 _interval, address _currencyAddress) public initializer {
+        __Ownable_init(msg.sender);
         subscriptionFee = _subscriptionFee;
         interval = _interval;
         currencyAddress = _currencyAddress;
+    }
+
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
     }
 
     function setSubscriptionFee(uint256 _newFee) external onlyOwner {
