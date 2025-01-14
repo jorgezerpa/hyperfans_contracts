@@ -14,6 +14,8 @@ contract SubscriptionService is Ownable {
     address[] public subscriptors;
     mapping(address => bool) alreadySubscribed;
     mapping(address => uint256) public subscriptionExpiry;
+    
+    address currencyAddress;
 
     event SubscriptionRenewed(address indexed subscriber, uint256 expiryTimestamp);
 
@@ -28,9 +30,10 @@ contract SubscriptionService is Ownable {
         _;
     }
 
-    constructor(uint256 _subscriptionFee, uint256 _interval) Ownable(msg.sender) {
+    constructor(uint256 _subscriptionFee, uint256 _interval, address _currencyAddress) Ownable(msg.sender) {
         subscriptionFee = _subscriptionFee;
         interval = _interval;
+        currencyAddress = _currencyAddress;
     }
 
     function setSubscriptionFee(uint256 _newFee) external onlyOwner {
@@ -49,15 +52,16 @@ contract SubscriptionService is Ownable {
         return interval;
     }
 
-    function subscribe() external payable isNotSubscribed {
-        require(msg.value >= subscriptionFee, "Insufficient payment for subscription");
-        
+    function subscribe() external isNotSubscribed {
+        // update states
         uint256 expiryTimestamp = block.timestamp + interval;
         subscriptionExpiry[msg.sender] = expiryTimestamp;
         subscriptors.push(msg.sender);
         alreadySubscribed[msg.sender] = true;
 
-        withdrawFunds();
+        // make the payment
+        IERC20 token = IERC20(currencyAddress);
+        token.transferFrom(msg.sender, owner(), subscriptionFee);
 
         emit SubscriptionRenewed(msg.sender, expiryTimestamp);
     }
@@ -66,27 +70,40 @@ contract SubscriptionService is Ownable {
         return block.timestamp <= subscriptionExpiry[msg.sender];
     }
 
-    function renewSubscription() external payable isSubscribed {
+    function renewSubscription() external isSubscribed {
         require(block.timestamp > subscriptionExpiry[msg.sender], "Subscription is still active");
-        require(msg.value >= subscriptionFee, "Insufficient payment for subscription");
 
         uint256 expiryTimestamp = block.timestamp + interval;
         subscriptionExpiry[msg.sender] = expiryTimestamp;
 
-        withdrawFunds();
+        // make the payment
+        IERC20 token = IERC20(currencyAddress);
+        token.transferFrom(msg.sender, owner(), subscriptionFee);
 
         emit SubscriptionRenewed(msg.sender, expiryTimestamp);
     }
 
-    // works too to give a free trial time
-    function extendSubscriptorInterval(uint256 newExpiryTimestamp, address subscriptor) external onlyOwner {
+    function modifySubscriptorExpiry(uint256 newExpiryTimestamp, address subscriptor) external onlyOwner {
         subscriptionExpiry[subscriptor] = newExpiryTimestamp;
     }
 
-    function extendSubscriptorsInterval(uint256 newExpiryTimestamp, address[] memory subscriptorsArray) external onlyOwner {
+    function modifySubscriptorsExpiries(uint256 newExpiryTimestamp, address[] memory subscriptorsArray) external onlyOwner {
         uint256 subscriptorsArrayLength = subscriptorsArray.length;
         for (uint i = 0; i < subscriptorsArrayLength; i++) {
             subscriptionExpiry[subscriptors[i]] = newExpiryTimestamp;
+        }
+    }
+
+    function extendSubscriptorExpiry(uint256 expiryTimestampToAdd, address subscriptor) external onlyOwner {
+        uint256 currentExpiry = subscriptionExpiry[subscriptor];
+        subscriptionExpiry[subscriptor] = currentExpiry + expiryTimestampToAdd;
+    }
+
+    function extendSubscriptorsExpiries(uint256 expiryTimestampToAdd, address[] memory subscriptorsArray) external onlyOwner {
+        uint256 subscriptorsArrayLength = subscriptorsArray.length;
+        for (uint i = 0; i < subscriptorsArrayLength; i++) {
+            uint256 currentExpiry = subscriptionExpiry[subscriptors[i]];
+            subscriptionExpiry[subscriptors[i]] = currentExpiry + expiryTimestampToAdd;
         }
     }
 
@@ -105,14 +122,5 @@ contract SubscriptionService is Ownable {
         }
 
         return subscriptorsToReturn;
-    }
-
-
-    // INTERNALS 
-    function withdrawFunds() internal onlyOwner {
-        uint256 balance = address(this).balance;
-        require(balance > 0, "No balance to withdraw");
-
-        payable(owner()).transfer(balance);
     }
 }

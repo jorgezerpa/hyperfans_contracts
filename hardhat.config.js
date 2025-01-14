@@ -9,7 +9,11 @@ module.exports = {
   solidity: "0.8.28",
   networks: {
     hardhat: {
-      chainId: 1337,
+      // chainId: 1337,
+      forking: {
+        url: "https://arbitrum-mainnet.infura.io/v3/b26a78bcb38b4957a68b3cdc645c2547",
+        blockNumber: 295383545
+      }
     },
     arbitrumSepolia: {
       url: "https://sepolia-rollup.arbitrum.io/rpc",
