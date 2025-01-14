@@ -4,7 +4,7 @@ const {
 } = require("@nomicfoundation/hardhat-toolbox/network-helpers");
 const { anyValue } = require("@nomicfoundation/hardhat-chai-matchers/withArgs");
 const { expect } = require("chai");
-const { network } = require("hardhat");
+const { network, upgrades } = require("hardhat");
 
 const ARBITRUM_RPC = "https://arbitrum-mainnet.infura.io/v3/b26a78bcb38b4957a68b3cdc645c2547"
 const ARBITRUM_SEPOLIA_RPC = "https://arbitrum-sepolia.infura.io/v3/b26a78bcb38b4957a68b3cdc645c2547"
@@ -20,10 +20,8 @@ describe("SubscriptionService", function () {
     const [owner, account1] = await ethers.getSigners();
 
     const SubscriptionService = await ethers.getContractFactory("SubscriptionService");
-    // const subscriptionService = await SubscriptionService.deploy(subscriptionFee, interval, USDCAddressArbitrum);
-    const subscriptionService = await SubscriptionService.deploy();
-    subscriptionService.initialize(subscriptionFee, interval, USDCAddressArbitrum);
-
+    const subscriptionService = await upgrades.deployProxy(SubscriptionService, [subscriptionFee, interval, USDCAddressArbitrum]);
+      
     return { subscriptionService, subscriptionFee, interval, owner, account1 };
   }
 
@@ -34,9 +32,7 @@ describe("SubscriptionService", function () {
     const [owner, account1, account2, account3, account4, account5] = await ethers.getSigners();
 
     const SubscriptionService = await ethers.getContractFactory("SubscriptionService");
-    // const subscriptionService = await SubscriptionService.deploy(subscriptionFee, interval, USDCAddressArbitrum);
-    const subscriptionService = await SubscriptionService.deploy();
-    subscriptionService.initialize(subscriptionFee, interval, USDCAddressArbitrum);
+    const subscriptionService = await upgrades.deployProxy(SubscriptionService, [subscriptionFee, interval, USDCAddressArbitrum]);
 
     // const USDC = await ethers.getContractAt("IERC20", USDCAddressArbitrum, owner); // no need to pass owner value cause is taken by default  
     const USDC = await ethers.getContractAt("IERC20", USDCAddressArbitrum, owner); // OWNER HAS 6412 USDC units 

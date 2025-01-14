@@ -43,7 +43,7 @@ contract SubscriptionService is OwnableUpgradeable {
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
-        _disableInitializers();
+        _disableInitializers(); // to block calls to initialize function from another origin than the proxy
     }
 
     function setSubscriptionFee(uint256 _newFee) external onlyOwner {

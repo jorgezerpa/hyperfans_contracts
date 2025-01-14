@@ -1,4 +1,5 @@
 require("@nomicfoundation/hardhat-toolbox");
+require('@openzeppelin/hardhat-upgrades');
 
 // NEVER WRITE DIRECTLY! use env variables of a protected file
 const SEPOLIA_TESTNET_PRIVATE_KEY = '';
