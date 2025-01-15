@@ -1,15 +1,12 @@
 const { buildModule } = require("@nomicfoundation/hardhat-ignition/modules");
-const { proxyModule } = require("./SubscriptionService")
-
+const subscriptionServiceModule = require("./ProxyModule")
 
 const upgradeModule = buildModule("UpgradeModule", (m) => {
     const proxyAdminOwner = m.getAccount(0);
-  
-    const { proxyAdmin, proxy } = m.useModule(proxyModule);
-  
-    const subscriptionServiceV2 = m.contract("SubscriptionServiceV2");
-  
+    const { proxyAdmin, proxy } = m.useModule(subscriptionServiceModule);
+    
     // initialize new storage variables if needed
+    const subscriptionServiceV2 = m.contract("SubscriptionServiceV2");
     const encodedFunctionCall = m.encodeFunctionCall(subscriptionServiceV2, "initializeX", []);
   
     m.call(proxyAdmin, "upgradeAndCall", [proxy, subscriptionServiceV2, encodedFunctionCall], {
@@ -23,9 +20,6 @@ const upgradeModule = buildModule("UpgradeModule", (m) => {
     const { proxy } = m.useModule(upgradeModule);
   
     const subscriptionService = m.contractAt("SubscriptionServiceV2", proxy);
-
-    const x = m.staticCall(subscriptionService, "getX");
-    console.log("hi X", x.contract.results)
   
     return { subscriptionService };
   });
