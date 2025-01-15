@@ -17,6 +17,7 @@ module.exports = {
     },
     arbitrumOne: {
       url: `https://arbitrum-mainnet.infura.io/v3/${process.env.INFURA_KEY}`,
+      // accounts: [process.env.ARBITRUM_PRIVATE_KEY]
     },
   },
 };
